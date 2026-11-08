@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Live Camera</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 1rem; background: #111; color: #eee; }
+    video { width: 100%; max-width: 960px; background: #000; }
+    #status { margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h1>Live Camera</h1>
+  <video id="video" controls autoplay muted playsinline></video>
+  <p id="status">Connecting...</p>
+
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+  <script>
+    const streamUrl = "https://numbers-kyle-careful-hits.trycloudflare.com/cam/index.m3u8";
+    const video = document.getElementById("video");
+    const status = document.getElementById("status");
+
+    if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      // Safari and iOS play HLS natively
+      video.src = streamUrl;
+      status.textContent = "Playing";
+    } else if (Hls.isSupported()) {
+      const hls = new Hls({ liveSyncDurationCount: 3 });
+      hls.loadSource(streamUrl);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => { status.textContent = "Playing"; });
+      hls.on(Hls.Events.ERROR, (_, data) => {
+        if (data.fatal) {
+          status.textContent = "Stream unavailable. Retrying...";
+          setTimeout(() => hls.loadSource(streamUrl), 5000);
+        }
+      });
+    } else {
+      status.textContent = "This browser does not support live video.";
+    }
+  </script>
+</body>
+</html>
